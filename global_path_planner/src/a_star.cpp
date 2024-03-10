@@ -59,7 +59,7 @@ void AStar::timer_callback(){
             path_msg.poses.push_back(msg);
 
          }
-
+        path_msg.poses.reserve();
         path_pub_->publish(path_msg);
         
     }
