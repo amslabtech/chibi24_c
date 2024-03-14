@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="chibi24_c_localizer" exec="chibi24_c_localizer_node" name="chibi24_c_localizer">
+        <param from="src/chibi24_c/localizer/param/params.yaml"/>
+    </node>
+</launch>
