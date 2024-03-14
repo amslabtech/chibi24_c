@@ -25,6 +25,7 @@ LocalPathPlanner::LocalPathPlanner() : Node("chibi24_c_local_path_planner")
     this->declare_parameter<double>("predict_time", 6.0);
     this->declare_parameter<bool>("is_visible", true);
     this->declare_parameter<double>("goal_tolerance", 0.5);
+    this->declare_parameter<std::string>("robot_frame", "odom");
 
     local_goal_sub_ = this->create_subscription<geometry_msgs::msg::PointStamped>(
         "/local_goal",
@@ -51,8 +52,12 @@ void LocalPathPlanner::goal_callback(const geometry_msgs::msg::PointStamped::Sha
     geometry_msgs::msg::TransformStamped transform;
     try
     {
+
+        std::string robot_frame;
+        this->get_parameter("robot_frame", robot_frame);
+
         transform = tf_buffer_->lookupTransform(
-            "base_link", "map", tf2::TimePointZero);
+            robot_frame, "map", tf2::TimePointZero);
     }
     catch (const tf2::TransformException &ex)
     {

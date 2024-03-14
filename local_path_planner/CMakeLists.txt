@@ -11,5 +11,10 @@ ament_auto_add_executable(${PROJECT_NAME}_node
   src/local_path_planner.cpp
   src/local_path_planner_node.cpp)
 
+
+install(DIRECTORY
+param
+)
+
 ament_auto_package()
 

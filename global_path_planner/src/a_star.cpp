@@ -2,8 +2,6 @@
 
 
 AStar::AStar():Node("chibi24_c_global_path_planner_node"){
-    // 初期化
-   timer_ = this->create_wall_timer(2000ms, std::bind(&AStar::timer_callback, this)); 
     // ロボットの移動方向とコストを定義する
     map_sub_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
         "/map",
@@ -21,8 +19,7 @@ AStar::AStar():Node("chibi24_c_global_path_planner_node"){
 }
 
 
-void AStar::timer_callback(){
-    if(has_map_){
+void AStar::create_aster(){
         std::vector<int64_t> way_points_x;
         std::vector<int64_t> way_points_y;
         this->get_parameter("way_points_x",way_points_x);
@@ -62,7 +59,6 @@ void AStar::timer_callback(){
         std::reverse(path_msg.poses.begin(), path_msg.poses.end());
         path_pub_->publish(path_msg);
         
-    }
 }
 
 std::shared_ptr<ANode> AStar::create_way_point_node(int x, int y){
@@ -77,7 +73,7 @@ void AStar::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg){
     expand_map_ = map_;
     obs_expander();
     map_pub_->publish(expand_map_);
-    has_map_ = true;
+    create_aster();
 }
 
 // マップの拡張
