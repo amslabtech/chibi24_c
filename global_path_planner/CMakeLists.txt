@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(cihibi24_c_global_path_planner)
+project(chibi24_c_global_path_planner)
 
 # find dependencies
 find_package(ament_cmake_auto REQUIRED)
