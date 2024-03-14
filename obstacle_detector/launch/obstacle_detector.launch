@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- config file path  -->
+    <arg name="rviz_settings" default="$(find obstacle_detector)/config/rviz/obstacle_detector.rviz"/>
+    <arg name="obstacle_detector_settings" default="$(find obstacle_detector)/config/param/obstacle_detector.yaml"/>
+
+    <!-- node launch -->
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_settings)"/>
+    <node pkg="obstacle_detector" type="obstacle_detector_node" name="obstacle_detector" output="screen">
+        <rosparam command="load" file="$(arg obstacle_detector_settings)"/>
+    </node>
+</launch>
