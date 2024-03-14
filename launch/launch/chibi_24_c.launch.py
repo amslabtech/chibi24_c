@@ -13,6 +13,7 @@ def generate_launch_description():
     global_path_planner_config_path = os.path.join(get_package_share_directory('chibi24_c_global_path_planner'), 'param', 'params.yaml')
     local_goal_creator_config_path = os.path.join(get_package_share_directory('chibi24_c_local_goal_creator'), 'param', 'params.yaml')
     local_path_planner_config_path = os.path.join(get_package_share_directory('chibi24_c_local_path_planner'), 'param', 'params.yaml')
+    obstacle_detector_config_path = os.path.join(get_package_share_directory('chibi24_c_obstacle_detector'), 'config','param', 'params.yaml')
 
     return launch.LaunchDescription([
         Node(
@@ -38,6 +39,12 @@ def generate_launch_description():
             executable='chibi24_c_local_path_planner_node',
             output='screen',
             parameters=[local_path_planner_config_path]
+        ),
+        Node(
+            package='chibi24_c_obstacle_detector',
+            executable='chibi24_c_obstacle_detector_node',
+            output='screen',
+            parameters=[obstacle_detector_config_path]
         )
     ])
 

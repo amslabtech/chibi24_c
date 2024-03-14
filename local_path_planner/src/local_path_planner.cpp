@@ -33,7 +33,7 @@ LocalPathPlanner::LocalPathPlanner() : Node("chibi24_c_local_path_planner")
         std::bind(&LocalPathPlanner::goal_callback, this, std::placeholders::_1));
 
     obstacle_sub_ = this->create_subscription<geometry_msgs::msg::PoseArray>(
-        "/local_map/obstacle",
+        "/obstacle_pose",
         rclcpp::QoS(1).reliable(),
         std::bind(&LocalPathPlanner::obstacle_callback, this, std::placeholders::_1));
     pub_predict_path_ = this->create_publisher<nav_msgs::msg::Path>("/predict_local_paths", rclcpp::QoS(1).reliable());
@@ -210,13 +210,13 @@ void LocalPathPlanner::visualize_traj(const std::vector<std::shared_ptr<RobotSta
 {
     nav_msgs::msg::Path local_path;
     local_path.header.stamp = now;
-    local_path.header.frame_id = "base_link";
+    local_path.header.frame_id = "map";
 
     for (const auto &state : traj)
     {
         geometry_msgs::msg::PoseStamped pose;
         pose.header.stamp = now;
-        pose.header.frame_id = "base_link";
+        pose.header.frame_id = "map";
         pose.pose.position.x = state->x;
         pose.pose.position.y = state->y;
         local_path.poses.push_back(pose);
