@@ -1,0 +1,13 @@
+chibi24_c_obstacle_detector:
+  ros__parameter:
+    hz: 10                   # ループ周期 [Hz]
+    laser_step: 3            # 何本ずつレーザを見るか(全1080本)
+    robot_frame: "base_link" # frame_id
+
+    # --- 柱に関する角度範囲の配列 [rad] ---
+    # 以下が無視される
+    # [0] < angle < [1], [2] < angle
+    # [num] -> num:index
+    ignore_angle_range_list: [0.29, 0.98, 1.96]
+    # --- はずれ値対策 ---
+    ignore_dist: 0.01

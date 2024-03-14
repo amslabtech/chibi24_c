@@ -1,0 +1,5 @@
+<launch>
+<node pkg="chibi24_c_obstacle_detector" exec="chibi24_c_obstacle_detector_node" name="chibi24_c_obstacle_detector">
+        <param from="src/chibi24_c/obstacle_detector/config/param/params_obstacle_detector.yaml"/>
+    </node>
+</launch>
