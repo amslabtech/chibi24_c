@@ -1,4 +1,4 @@
-chibi24_c_obstacle_detector_node:
+chibi24_c_obstacle_detector:
   ros__parameters:
     hz: 10                   # ループ周期 [Hz]
     laser_step: 3            # 何本ずつレーザを見るか(全1080本)
@@ -10,4 +10,4 @@ chibi24_c_obstacle_detector_node:
     # [num] -> num:index
     ignore_angle_range_list: [0.29, 0.98, 1.96]
     # --- はずれ値対策 ---
-    ignore_dist: 0.01
+    ignore_dist: 1.0

@@ -8,7 +8,7 @@ from launch.actions import ExecuteProcess,TimerAction
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.substitutions import LaunchConfiguration
 from distutils.util import strtobool
-
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 
 def setup_node(context, *args, **kwargs):
@@ -19,8 +19,8 @@ def setup_node(context, *args, **kwargs):
     local_goal_creator_config_path = os.path.join(get_package_share_directory('chibi24_c_local_goal_creator'), 'param', 'params.yaml')
     local_path_planner_config_path = os.path.join(get_package_share_directory('chibi24_c_local_path_planner'), 'param', 'params.yaml')
     obstacle_detector_config_path = os.path.join(get_package_share_directory('chibi24_c_obstacle_detector'), 'config','param', 'params_obstacle_detector.yaml')
-    map_file_path = os.path.join(get_package_share_directory('chibi24_c_launch'), 'files', 'map', "map.yaml")
-   
+    map_file_path = os.path.join(get_package_share_directory('chibi24_c_launch'), 'files', 'map', "map.yaml") 
+    #other_launch_file_path = os.path.join(get_package_share_directory("urg_node2"), 'launch', 'urg_node2.launch.py')
 
 
     return [
@@ -68,13 +68,23 @@ def setup_node(context, *args, **kwargs):
             parameters=[{'yaml_filename': map_file_path}]
         ),
         Node(
-        package='nav2_lifecycle_manager',
-        executable='lifecycle_manager',
-        name='lifecycle_manager',
-        output='screen',
-        emulate_tty=True, 
-        parameters=[{'use_sim_time': use_sim_time_value, 'autostart': True, 'node_names':  ['map_server']}]
-    )
+            package='nav2_lifecycle_manager',
+            executable='lifecycle_manager',
+            name='lifecycle_manager',
+            output='screen',
+            emulate_tty=True, 
+            parameters=[{'use_sim_time': use_sim_time_value, 'autostart': True, 'node_names':  ['map_server']}]
+        ),
+        Node(
+            package='roomba_500driver_meiji',
+            executable='main500',
+            name='main500',
+            output='screen'
+        ),  
+#        IncludeLaunchDescription(
+#            PythonLaunchDescriptionSource(other_launch_file_path),
+#        )
+        
     ]
 
 def generate_launch_description():

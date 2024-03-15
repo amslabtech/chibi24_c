@@ -23,8 +23,13 @@ class RobotState {
         double calculate_goal_direction_theta(double goal_x, double goal_y) {
             double dx = goal_x - x;
             double dy = goal_y - y;
+            double target_theta;
             const double goal_theta = std::atan2(dy, dx);
-            return normalize_angle(std::abs(goal_theta -theta));
+            if(goal_theta > theta)
+                target_theta = goal_theta - theta;
+            else
+                target_theta = theta - goal_theta;
+            return normalize_angle(std::abs(target_theta));
         }
     private:
 

@@ -4,7 +4,7 @@ ObstacleDetector::ObstacleDetector() : Node("chibi24_c_obstacle_detector")
 {
     this->declare_parameter("hz_", 10);
     this->declare_parameter("laser_step", 3);
-    this->declare_parameter("ignore_distance", 0.01);
+    this->declare_parameter("ignore_distance", 1.0);
     this->declare_parameter("ignore_angle_range_list", std::vector<double>({0.29, 0.98, 1.96}));
     this->declare_parameter("robot_frame", "base_link");
 
@@ -43,11 +43,11 @@ void ObstacleDetector::scan_obstacle()
     obstacle_pose_array_.poses.clear();
     for(int i=0; i<laser_scan_.ranges.size(); i+=laser_step_)
     {
-        if(is_ignore_scan(laser_scan_.angle_min + laser_scan_.angle_increment * i))
+        /*if(is_ignore_scan(laser_scan_.angle_min + laser_scan_.angle_increment * i))
         {
             continue;
-        }
-        if(laser_scan_.ranges[i] < ignore_distance_)
+        }*/
+        if(laser_scan_.ranges[i] < ignore_distance_ && laser_scan_.ranges[i] > 0.1)
         {
             geometry_msgs::msg::Pose obs_pose;
             obs_pose.position.x = laser_scan_.ranges[i] * cos(laser_scan_.angle_min + laser_scan_.angle_increment * i);
