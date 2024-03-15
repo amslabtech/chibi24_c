@@ -25,14 +25,14 @@ void LocalGoalCreator::path_callback(nav_msgs::msg::Path::SharedPtr msg)
 
 void LocalGoalCreator::pose_callback(geometry_msgs::msg::PoseStamped::SharedPtr msg)
 {
-     printf("pose_callback \n");
+    // printf("pose_callback \n");
     if (global_path_.empty())
     {
         return;
     }
     auto pose = *msg;
-    double target_dist_to_goal;
-    this->get_parameter("target_dist_to_goal", target_dist_to_goal);
+    double target_dist_to_goal= this->get_parameter("target_dist_to_goal").as_double();
+
     // 最新のゴールを取得
     auto goal = global_path_[index_];
     auto distance = calc_distance(pose.pose, goal.pose);
@@ -44,8 +44,8 @@ void LocalGoalCreator::pose_callback(geometry_msgs::msg::PoseStamped::SharedPtr 
         goal = global_path_[index_];
         distance = calc_distance(pose.pose, goal.pose);
     }
-    printf("target_dist_to_goal %f \n",target_dist_to_goal);
-    printf("distance %f \n",distance);
+  //  printf("target_dist_to_goal %f \n",target_dist_to_goal);
+ //   printf("distance %f \n",distance);
     auto local_goal = geometry_msgs::msg::PointStamped();
     local_goal.header.frame_id = "map";
     local_goal.header.stamp = this->get_clock()->now();
@@ -55,6 +55,6 @@ void LocalGoalCreator::pose_callback(geometry_msgs::msg::PoseStamped::SharedPtr 
 
 double LocalGoalCreator::calc_distance(geometry_msgs::msg::Pose current, geometry_msgs::msg::Pose goal)
 {
-    printf("goal x:%f y:%f  current x:%f y:%f \n",goal.position.x,goal.position.y,current.position.x,current.position.y);
+   // printf("goal x:%f y:%f  current x:%f y:%f \n",goal.position.x,goal.position.y,current.position.x,current.position.y);
     return std::hypot(goal.position.x - current.position.x, goal.position.y - current.position.y);
 }

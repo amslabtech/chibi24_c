@@ -12,7 +12,8 @@ ament_auto_add_executable(${PROJECT_NAME}_node
   src/local_goal_creator_node.cpp)
 
 install(DIRECTORY
-param
+  param
+  DESTINATION share/${PROJECT_NAME}/
 )
 
   

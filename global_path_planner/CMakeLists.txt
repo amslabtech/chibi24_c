@@ -14,6 +14,7 @@ ament_auto_add_executable(${PROJECT_NAME}_node
   # ディレクトリのインストール
 install(DIRECTORY
 param
+DESTINATION share/${PROJECT_NAME}/
 )
 
 ament_auto_package()

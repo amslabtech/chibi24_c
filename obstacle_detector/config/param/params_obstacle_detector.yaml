@@ -1,5 +1,5 @@
-chibi24_c_obstacle_detector:
-  ros__parameter:
+chibi24_c_obstacle_detector_node:
+  ros__parameters:
     hz: 10                   # ループ周期 [Hz]
     laser_step: 3            # 何本ずつレーザを見るか(全1080本)
     robot_frame: "base_link" # frame_id

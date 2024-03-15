@@ -25,7 +25,7 @@ LocalPathPlanner::LocalPathPlanner() : Node("chibi24_c_local_path_planner")
     this->declare_parameter<double>("predict_time", 6.0);
     this->declare_parameter<bool>("is_visible", true);
     this->declare_parameter<double>("goal_tolerance", 0.5);
-    this->declare_parameter<std::string>("robot_frame", "odom");
+    this->declare_parameter<std::string>("robot_frame", "base_link");
 
     local_goal_sub_ = this->create_subscription<geometry_msgs::msg::PointStamped>(
         "/local_goal",
@@ -53,11 +53,11 @@ void LocalPathPlanner::goal_callback(const geometry_msgs::msg::PointStamped::Sha
     try
     {
 
-        std::string robot_frame;
-        this->get_parameter("robot_frame", robot_frame);
-
         transform = tf_buffer_->lookupTransform(
-            robot_frame, "map", tf2::TimePointZero);
+            this->get_parameter("robot_frame").as_string(), 
+            "map", 
+            tf2::TimePointZero);
+        
     }
     catch (const tf2::TransformException &ex)
     {
@@ -73,17 +73,17 @@ void LocalPathPlanner::goal_callback(const geometry_msgs::msg::PointStamped::Sha
 
 void LocalPathPlanner::obstacle_callback(const geometry_msgs::msg::PoseArray::SharedPtr msg)
 {
-    printf("obstacle_callback \n");
+  //  printf("obstacle_callback \n");
     obstacle_pose_ = *msg;
     has_obs_poses_ = true;
 }
 
 void LocalPathPlanner::timer_callback()
 {
-    printf("timer_callback \n");
+   // printf("timer_callback \n");
     if (can_move())
     {
-        printf("start \n");
+      //  printf("start \n");
         calc_final_input();
         roomba_control(robot_state_->velocity, robot_state_->yaw_rate);
     }
@@ -104,8 +104,8 @@ bool LocalPathPlanner::can_move()
     const double dy = local_goal_.point.y;
     const double dist_to_goal = hypot(dx, dy); // 現在位置からゴールまでの距離
 
-    double goal_tolerance; // 回転解像度
-    this->get_parameter("goal_tolerance", goal_tolerance);
+    double goal_tolerance=this->get_parameter("goal_tolerance").as_double(); // 回転解像度
+    
     if (dist_to_goal > goal_tolerance)
     {
         return true;
@@ -132,25 +132,19 @@ void LocalPathPlanner::calc_final_input()
     // ロボットの初期値を作成
     V dw = calc_dynamic_window();
 
-    double v_reso; // 速度解像度
-    this->get_parameter("v_reso", v_reso);
-    double yawrate_reso; // 回転解像度
-    this->get_parameter("yawrate_reso", yawrate_reso);
+    // 速度解像度
+    double v_reso = this->get_parameter("v_reso").as_double();
+    // 回転解像度
+    double yawrate_reso = this->get_parameter("yawrate_reso").as_double();
 
-    double max_speed;
-    this->get_parameter("max_speed", max_speed);
-    double speed_cost_gain;
-    this->get_parameter("speed_cost_gain", speed_cost_gain);
-
-    double stop_vel_th;
-    this->get_parameter("stop_vel_th", stop_vel_th);
-    double stop_yawrate_th;
-    this->get_parameter("stop_yawrate_th", stop_yawrate_th);
+    double max_speed = this->get_parameter("max_speed").as_double();
+    double speed_cost_gain = this->get_parameter("speed_cost_gain").as_double();
+    double stop_vel_th = this->get_parameter("stop_vel_th").as_double();
+    double stop_yawrate_th = this->get_parameter("stop_yawrate_th").as_double();
 
     std::vector<std::vector<std::shared_ptr<RobotState>>> trajectories;
     double max_velocity = 0.0;
     double max_yawrate = 0.0;
-
     double max_score = 0.0;
 
     // 後々の表示用に利用
@@ -190,8 +184,7 @@ void LocalPathPlanner::calc_final_input()
     robot_state_->velocity = max_velocity;
     robot_state_->yaw_rate = max_yawrate;
 
-    bool is_visible;
-    this->get_parameter("is_visible", is_visible);
+    bool is_visible= this->get_parameter("is_visible").as_bool();
     // pathの可視化
     if (is_visible)
     {
@@ -208,15 +201,17 @@ void LocalPathPlanner::calc_final_input()
 
 void LocalPathPlanner::visualize_traj(const std::vector<std::shared_ptr<RobotState>> &traj, const rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr &pub_local_path, rclcpp::Time now)
 {
+
+    std::string robot_frame = this->get_parameter("robot_frame").as_string();
     nav_msgs::msg::Path local_path;
     local_path.header.stamp = now;
-    local_path.header.frame_id = "map";
+    local_path.header.frame_id = robot_frame;
 
     for (const auto &state : traj)
     {
         geometry_msgs::msg::PoseStamped pose;
         pose.header.stamp = now;
-        pose.header.frame_id = "map";
+        pose.header.frame_id = robot_frame;
         pose.pose.position.x = state->x;
         pose.pose.position.y = state->y;
         local_path.poses.push_back(pose);
@@ -228,16 +223,16 @@ void LocalPathPlanner::visualize_traj(const std::vector<std::shared_ptr<RobotSta
 // 評価関数を計算
 double LocalPathPlanner::calc_evaluation(const std::vector<std::shared_ptr<RobotState>> &trajectory)
 {
-    double weight_heading;
-    this->get_parameter("weight_heading", weight_heading);
+    double weight_heading= this->get_parameter("weight_heading").as_double();
+   
     const double heading_score = weight_heading * calc_heading_eval(trajectory);
 
-    double weight_dist;
-    this->get_parameter("weight_dist", weight_dist);
+    double weight_dist=this->get_parameter("weight_dist").as_double();
+    
     const double distance_score = weight_dist * calc_dist_eval(trajectory);
 
-    double weight_vel;
-    this->get_parameter("weight_vel", weight_vel);
+    double weight_vel= this->get_parameter("weight_vel").as_double();
+   
     const double velocity_score = weight_vel * calc_vel_eval(trajectory);
 
     const double total_score = heading_score + distance_score + velocity_score;
@@ -261,11 +256,11 @@ double LocalPathPlanner::calc_heading_eval(const std::vector<std::shared_ptr<Rob
 
 double LocalPathPlanner::calc_dist_eval(const std::vector<std::shared_ptr<RobotState>> &trajectory)
 {
-    double roomba_radius;
-    this->get_parameter("roomba_radius", roomba_radius);
+    double roomba_radius = this->get_parameter("roomba_radius").as_double();
+    
 
-    double radius_margin;
-    this->get_parameter("radius_margin", radius_margin);
+    double radius_margin=this->get_parameter("radius_margin").as_double();
+    
 
     double min_dist = MAX_OBSTRACLE_COST;
     // pathの点と障害物のすべての組み合わせを探索
@@ -292,8 +287,8 @@ double LocalPathPlanner::calc_dist_eval(const std::vector<std::shared_ptr<RobotS
         }
     }
 
-    double search_range;
-    this->get_parameter("search_range", search_range);
+    double search_range=this->get_parameter("search_range").as_double();
+    
 
     return min_dist / search_range; // 正規化
 }
@@ -301,8 +296,8 @@ double LocalPathPlanner::calc_dist_eval(const std::vector<std::shared_ptr<RobotS
 double LocalPathPlanner::calc_vel_eval(const std::vector<std::shared_ptr<RobotState>> &trajectory)
 {
 
-    double max_vel;
-    this->get_parameter("max_vel", max_vel);
+    double max_vel=this->get_parameter("max_vel").as_double();
+    
 
     const auto last_trajectory = trajectory.back();
     if (0.0 < last_trajectory->velocity) // 前進
@@ -317,11 +312,10 @@ std::vector<std::shared_ptr<RobotState>> LocalPathPlanner::calc_trajectory(doubl
 {
     std::vector<std::shared_ptr<RobotState>> trajectory;
 
-    double dt;
-    this->get_parameter("dt", dt);
+    double dt=this->get_parameter("dt").as_double();
+    
 
-    double predict_time;
-    this->get_parameter("predict_time", predict_time);
+    double predict_time=   this->get_parameter("predict_time").as_double();
 
     std::shared_ptr<RobotState> state = std::make_shared<RobotState>();
     for (double t = 0; t <= predict_time; t += dt)
@@ -351,14 +345,13 @@ V LocalPathPlanner::calc_dynamic_window()
     vs.min_yawrate *= -1;
 
     // 現在の速度および旋回速度に基づいて、最大加速度および最大旋回加速度を考慮した範囲
-    double max_accel;
-    this->get_parameter("max_accel", max_accel);
+    double max_accel=this->get_parameter("max_accel").as_double();
+    
 
-    double dt;
-    this->get_parameter("dt", dt);
+    double dt= this->get_parameter("dt").as_double();
 
-    double max_dyawrate;
-    this->get_parameter("max_dyawrate", max_dyawrate);
+
+    double max_dyawrate=this->get_parameter("max_dyawrate").as_double();
     V vd;
     vd.min_speed = robot_state_->velocity - max_accel * dt;
     vd.max_speed = robot_state_->velocity + max_accel * dt;

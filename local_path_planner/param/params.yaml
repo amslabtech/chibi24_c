@@ -1,4 +1,4 @@
-chibi24_c_local_path_planner:
+chibi24_c_local_path_planner_node:
   ros__parameters:
     max_speed: 0.5
     min_speed: 0.1
@@ -21,5 +21,5 @@ chibi24_c_local_path_planner:
     predict_time: 6.0
     is_visible: true
     goal_tolerance: 0.5
-robot_frame: "odom"
+    robot_frame: "base_link"
 

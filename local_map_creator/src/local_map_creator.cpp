@@ -12,7 +12,7 @@ LocalMapCreator::LocalMapCreator() : Node("chibi24_c_local_map_creater")
     this->get_parameter("map_reso", map_reso_);
 
     // Subscriber
-    sub_obs_poses_ = this->create_subscription<geometry_msgs::msg::PoseArray>("/local_map/obstacle", rclcpp::QoS(1).reliable(), std::bind(&LocalMapCreator::obs_poses_callback, this, std::placeholders::_1));
+    sub_obs_poses_ = this->create_subscription<geometry_msgs::msg::PoseArray>("/obstacle_pose", rclcpp::QoS(1).reliable(), std::bind(&LocalMapCreator::obs_poses_callback, this, std::placeholders::_1));
 
     // Publisher
     pub_local_map_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("/local_map", rclcpp::QoS(1).reliable());

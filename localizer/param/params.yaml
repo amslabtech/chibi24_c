@@ -1,4 +1,4 @@
-chibi24_c_localizer:
+chibi24_c_localizer_node:
   ros__parameters:
 
     # 基本設定

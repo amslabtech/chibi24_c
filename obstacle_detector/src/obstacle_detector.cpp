@@ -6,12 +6,13 @@ ObstacleDetector::ObstacleDetector() : Node("chibi24_c_obstacle_detector")
     this->declare_parameter("laser_step", 3);
     this->declare_parameter("ignore_distance", 0.01);
     this->declare_parameter("ignore_angle_range_list", std::vector<double>({0.29, 0.98, 1.96}));
+    this->declare_parameter("robot_frame", "base_link");
 
     this->get_parameter("hz_", hz_);
     this->get_parameter("laser_step", laser_step_);
     this->get_parameter("ignore_distance", ignore_distance_);
     this->get_parameter("ignore_angle_range_list", ignore_angle_range_list_);
-
+    this->get_parameter("robot_frame", robot_frame_);
     laser_scan_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>("/scan", rclcpp::QoS(1).reliable(), std::bind(&ObstacleDetector::laser_scan_callback, this, std::placeholders::_1));
     obstacle_pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseArray>("/obstacle_pose", rclcpp::QoS(1).reliable());
 

@@ -27,7 +27,6 @@ class AStar: public rclcpp::Node
         void obs_expand(int index);
         bool is_Wall(std::shared_ptr<ANode>  node);
         std::list<Action> create_action_list();
-        std::list<std::shared_ptr<ANode>>::iterator search_node(std::list<std::shared_ptr<ANode>> node_list,std::shared_ptr<ANode> target);
         std::shared_ptr<ANode> create_way_point_node(int x, int y);
         std::shared_ptr<ANode> create_path(std::shared_ptr<ANode> start,std::shared_ptr<ANode> goal);
 

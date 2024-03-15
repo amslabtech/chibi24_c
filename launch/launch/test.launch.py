@@ -13,20 +13,23 @@ from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     # other_launch_file.launch.pyが存在するパッケージ名
-    other_launch_file_path = os.path.join(get_package_share_directory("chibi24_c_launch"), 'launch', 'map_pablish.launch.py')
+    other_launch_file_path = os.path.join(get_package_share_directory("chibi24_c_launch"), 'launch', 'chibi_24_c.launch.py')
     bagfile_path = os.path.join(get_package_share_directory('chibi24_c_launch'), 'files', 'bagfiles')
-    nap_file_path = os.path.join(get_package_share_directory('chibi24_c_launch'), 'files', 'map',"map.yaml")
-
 
     return LaunchDescription([
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(other_launch_file_path),
-            # launch_arguments={'arg_name': 'arg_value'}.items()  # 必要に応じて引数を渡すことができます
+            launch_arguments=[("use_sim_time", "True")]
         ),
         ExecuteProcess(
-            cmd=['ros2', 'bag', 'play', bagfile_path],
+            cmd=['ros2', 'bag', 'play', bagfile_path,'--clock'],
             output='screen'
-        )
+        ),
+        Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            name='static_transform_publisher',
+            arguments=['0', '0', '0', '0', '0', '0', '1', 'base_link', 'laser'])
     ])
 
 if __name__ == '__main__':

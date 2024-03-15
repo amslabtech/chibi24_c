@@ -12,8 +12,9 @@ ament_auto_add_executable(${PROJECT_NAME}_node
   src/local_path_planner_node.cpp)
 
 
-install(DIRECTORY
-param
+  install(DIRECTORY
+  param
+  DESTINATION share/${PROJECT_NAME}/
 )
 
 ament_auto_package()
