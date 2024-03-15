@@ -11,5 +11,10 @@ ament_auto_add_executable(${PROJECT_NAME}_node
   src/a_star.cpp
   src/global_path_planner_node.cpp)
 
+  # ディレクトリのインストール
+install(DIRECTORY
+param
+DESTINATION share/${PROJECT_NAME}/
+)
 
 ament_auto_package()

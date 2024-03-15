@@ -2,8 +2,6 @@
 
 
 AStar::AStar():Node("chibi24_c_global_path_planner_node"){
-    // 初期化
-   timer_ = this->create_wall_timer(2000ms, std::bind(&AStar::timer_callback, this)); 
     // ロボットの移動方向とコストを定義する
     map_sub_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
         "/map",
@@ -11,7 +9,7 @@ AStar::AStar():Node("chibi24_c_global_path_planner_node"){
         std::bind(&AStar::map_callback,this,std::placeholders::_1)
         );
     map_pub_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("/map/new",rclcpp::QoS(1).reliable());
-    this->declare_parameter<int>("expansion_size",1);
+    this->declare_parameter<double>("expansion_size",0.2);
 
     this->declare_parameter<std::vector<int64_t>>("way_points_x", {-1,15,15,-18,-18,-1});
     this->declare_parameter<std::vector<int64_t>>("way_points_y", {0,0,14,14,0,0});
@@ -21,12 +19,9 @@ AStar::AStar():Node("chibi24_c_global_path_planner_node"){
 }
 
 
-void AStar::timer_callback(){
-    if(has_map_){
-        std::vector<int64_t> way_points_x;
-        std::vector<int64_t> way_points_y;
-        this->get_parameter("way_points_x",way_points_x);
-        this->get_parameter("way_points_y",way_points_y);
+void AStar::create_aster(){
+        std::vector<int64_t> way_points_x =  this->get_parameter("way_points_x").as_integer_array();
+        std::vector<int64_t> way_points_y =  this->get_parameter("way_points_y").as_integer_array();
 
         std::list<std::shared_ptr<ANode>> way_point_node_list;
         for(int i = 0; i < way_points_x.size(); i++){
@@ -43,7 +38,7 @@ void AStar::timer_callback(){
 
         std::list<std::shared_ptr<ANode>> result_list;
         while(start_node != nullptr){
-            printf("x:%d y:%d  F:%f \n",start_node->x,start_node->y,start_node->getF());
+          //  printf("x:%d y:%d  F:%f \n",start_node->x,start_node->y,start_node->getF());
             result_list.push_back(start_node);
             start_node = start_node->parent;
         }
@@ -62,7 +57,6 @@ void AStar::timer_callback(){
         std::reverse(path_msg.poses.begin(), path_msg.poses.end());
         path_pub_->publish(path_msg);
         
-    }
 }
 
 std::shared_ptr<ANode> AStar::create_way_point_node(int x, int y){
@@ -77,7 +71,7 @@ void AStar::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg){
     expand_map_ = map_;
     obs_expander();
     map_pub_->publish(expand_map_);
-    has_map_ = true;
+    create_aster();
 }
 
 // マップの拡張
@@ -95,8 +89,7 @@ void AStar::obs_expander(){
 void AStar::obs_expand(int index){
     int x = index % map_.info.width;
     int y = index / map_.info.width;
-    int expansion_size=0;
-    this->get_parameter("expansion_size", expansion_size);
+    double expansion_size=this->get_parameter("expansion_size").as_double();
 
     // マップの解像度を考慮して拡張サイズを調整し、その後半分のサイズにする
     int half_expansion_size = (expansion_size / map_.info.resolution) / 2;
@@ -149,7 +142,7 @@ std::shared_ptr<ANode> AStar::create_path(std::shared_ptr<ANode> start,std::shar
             return current;
         }
 
-        printf("current x %d y %d f %f goal x %d y %d \n",current->x,current->y,current->getF(),goal->x,goal->y);
+      //  printf("current x %d y %d f %f goal x %d y %d \n",current->x,current->y,current->getF(),goal->x,goal->y);
         close_list.push_back(current);
 
         // デバッグ中は捜査しているポイントをパブリッシュする
@@ -203,12 +196,6 @@ std::shared_ptr<ANode> AStar::create_path(std::shared_ptr<ANode> start,std::shar
             open_list.push_back(new_node);
         }
     }
-}
-
-std::list<std::shared_ptr<ANode>>::iterator AStar::search_node(std::list<std::shared_ptr<ANode>> node_list,std::shared_ptr<ANode> target){
-    return std::find_if(node_list.begin(), node_list.end(), [target](std::shared_ptr<ANode> node) { 
-                return *node == *target;
-            });
 }
 
 bool AStar::is_Wall(std::shared_ptr<ANode>  node){

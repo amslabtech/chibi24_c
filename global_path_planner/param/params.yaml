@@ -1,0 +1,6 @@
+chibi24_c_global_path_planner_node:
+  ros__parameters:
+    expansion_size: 0.5
+    way_points_x: [-1, 15, 15, -18, -18, -1]
+    way_points_y: [0, 0, 14, 14, 0, 0]
+    is_debug: true
