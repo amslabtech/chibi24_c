@@ -44,6 +44,7 @@ void LocalGoalCreator::pose_callback(geometry_msgs::msg::PoseStamped::SharedPtr 
         goal = global_path_[index_];
         distance = calc_distance(pose.pose, goal.pose);
     }
+
   //  printf("target_dist_to_goal %f \n",target_dist_to_goal);
  //   printf("distance %f \n",distance);
     auto local_goal = geometry_msgs::msg::PointStamped();

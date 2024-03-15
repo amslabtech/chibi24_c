@@ -113,7 +113,7 @@ bool LocalPathPlanner::can_move()
     else
     {
         roomba_control(0.0, 0.0);
-        exit(0); // ノード終了
+        //exit(0); // ノード終了
     }
 }
 
@@ -165,7 +165,7 @@ void LocalPathPlanner::calc_final_input()
             // ほとんど停止の場合最大スコアは最大とする
             if (v < stop_vel_th and abs(y) < stop_yawrate_th)
             {
-                score = MAX_SCORE;
+                score = -1 * MAX_SCORE;
             }
 
             // 最大値の更新
@@ -262,7 +262,7 @@ double LocalPathPlanner::calc_dist_eval(const std::vector<std::shared_ptr<RobotS
     double radius_margin=this->get_parameter("radius_margin").as_double();
     
 
-    double min_dist = MAX_OBSTRACLE_COST;
+    double min_dist = this->get_parameter("search_range").as_double();
     // pathの点と障害物のすべての組み合わせを探索
     for (const auto &state : trajectory)
     {
@@ -276,9 +276,9 @@ double LocalPathPlanner::calc_dist_eval(const std::vector<std::shared_ptr<RobotS
             // 壁に衝突したパスを評価
             if (dist <= roomba_radius + radius_margin)
             {
-                return MAX_OBSTRACLE_COST;
+                return -1 * MAX_OBSTRACLE_COST;
             }
-
+		//printf("dist %f",dist);
             // 最小値の更新
             if (dist < min_dist)
             {
@@ -321,6 +321,7 @@ std::vector<std::shared_ptr<RobotState>> LocalPathPlanner::calc_trajectory(doubl
     for (double t = 0; t <= predict_time; t += dt)
     {
         state = motion(state, v, y, dt);
+	//printf("state x:%f y:%f theta:%f v:%f yaw:%f",state->x,state->y,state->theta,state->velocity,state->yaw_rate);
         trajectory.push_back(state);
     }
 
