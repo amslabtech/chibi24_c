@@ -23,14 +23,14 @@ class RobotState {
         double calculate_goal_direction_theta(double goal_x, double goal_y) {
             double dx = goal_x - x;
             double dy = goal_y - y;
-            double target_theta;
             const double goal_theta = std::atan2(dy, dx);
-            if(goal_theta > theta)
-                target_theta = goal_theta - theta;
-            else
-                target_theta = theta - goal_theta;
-            return normalize_angle(std::abs(target_theta));
+            double target_theta = normalize_angle(goal_theta - theta);
+
+            // 方位の差分を正規化して、1（ゴールに直接向いている）から0（逆を向いている）の範囲で評価する。
+            // M_PIから差し引いて絶対値を取ることで、ゴールへの向きが良いほど高いスコアになるように計算。
+            return(M_PI - std::abs(target_theta))/M_PI; // 正規化
         }
+
     private:
 
     // 適切な角度(-M_PI ~ M_PI)を返す

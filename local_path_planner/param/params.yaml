@@ -1,23 +1,21 @@
 chibi24_c_local_path_planner:
   ros__parameters:
-    max_speed: 0.3
-    min_speed: 0.1
+    max_vel: 0.25
+    min_vel: 0.00
     max_yawrate: 0.1
     max_accel: 1000.0
     max_dyawrate: 1000.0
     v_reso: 0.05
     yawrate_reso: 0.02
     dt: 0.1
-    speed_cost_gain: 0.5
     stop_vel_th: 0.1
     stop_yawrate_th: 0.1
     weight_heading: 0.7
     weight_dist: 0.8
     weight_vel: 0.6
-    roomba_radius: 0.01
+    roomba_radius: 0.25
     radius_margin: 0.04
     search_range: 0.95
-    max_vel: 0.1
     predict_time: 6.0
     is_visible: true
     goal_tolerance: 0.5

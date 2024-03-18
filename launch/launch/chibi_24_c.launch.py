@@ -74,13 +74,7 @@ def setup_node(context, *args, **kwargs):
             output='screen',
             emulate_tty=True, 
             parameters=[{'use_sim_time': use_sim_time_value, 'autostart': True, 'node_names':  ['map_server']}]
-        ),
-        Node(
-            package='roomba_500driver_meiji',
-            executable='main500',
-            name='main500',
-            output='screen'
-        ),  
+        )
 #        IncludeLaunchDescription(
 #            PythonLaunchDescriptionSource(other_launch_file_path),
 #        )

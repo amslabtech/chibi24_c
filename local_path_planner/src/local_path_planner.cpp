@@ -1,11 +1,10 @@
 #include "local_path_planner/local_path_planner.hpp"
-#define MAX_OBSTRACLE_COST std::numeric_limits<float>::infinity()
-#define MAX_SCORE std::numeric_limits<float>::infinity()
+#define MIN_OBSTRACLE_COST -std::numeric_limits<float>::infinity()
+#define MIN_SCORE -std::numeric_limits<float>::infinity()
 
 LocalPathPlanner::LocalPathPlanner() : Node("chibi24_c_local_path_planner")
 {
-    this->declare_parameter<double>("max_speed", 0.5);
-    this->declare_parameter<double>("min_speed", 0.1);
+    this->declare_parameter<double>("min_vel", 0.0);
     this->declare_parameter<double>("max_yawrate", 0.1);
     this->declare_parameter<double>("max_accel", 1000.0);
     this->declare_parameter<double>("max_dyawrate", 1000.0);
@@ -113,7 +112,7 @@ bool LocalPathPlanner::can_move()
     else
     {
         roomba_control(0.0, 0.0);
-        //exit(0); // ノード終了
+        exit(0); // ノード終了
     }
 }
 
@@ -131,30 +130,28 @@ void LocalPathPlanner::calc_final_input()
 {
     // ロボットの初期値を作成
     V dw = calc_dynamic_window();
-
     // 速度解像度
     double v_reso = this->get_parameter("v_reso").as_double();
     // 回転解像度
     double yawrate_reso = this->get_parameter("yawrate_reso").as_double();
-
-    double max_speed = this->get_parameter("max_speed").as_double();
-    double speed_cost_gain = this->get_parameter("speed_cost_gain").as_double();
     double stop_vel_th = this->get_parameter("stop_vel_th").as_double();
     double stop_yawrate_th = this->get_parameter("stop_yawrate_th").as_double();
 
     std::vector<std::vector<std::shared_ptr<RobotState>>> trajectories;
     double max_velocity = 0.0;
     double max_yawrate = 0.0;
-    double max_score = 0.0;
+    double max_score = MIN_SCORE;
 
     // 後々の表示用に利用
     int i = 0;
     int index_of_max_score = 0;
     // 最低速度から最高速度まで速度解像度分移動しながら
     // 最低回転速度から最高回転速度まで回転解像度分くるくる回る
-    for (double v = dw.min_speed; v < dw.max_speed; v += v_reso)
+
+    printf("dw min_vel %f, max_vel %f \n",dw.min_vel,dw.max_vel);
+   for (double v = dw.min_vel; v <= dw.max_vel; v += v_reso)
     {
-        for (double y = dw.min_yawrate; y < dw.max_yawrate; y += yawrate_reso)
+        for (double y = dw.min_yawrate; y <= dw.max_yawrate; y += yawrate_reso)
         {
 
             auto trajectory = calc_trajectory(v, y);
@@ -162,11 +159,13 @@ void LocalPathPlanner::calc_final_input()
             double score = calc_evaluation(trajectory);
             trajectories.push_back(trajectory);
 
-            // ほとんど停止の場合最大スコアは最大とする
+            // ほとんど停止の場合最大スコアは最小とする
             if (v < stop_vel_th and abs(y) < stop_yawrate_th)
             {
-                score = -1 * MAX_SCORE;
+                score = MIN_SCORE;
             }
+
+            //printf("velocity %f, yawrate %f  score %f  \n",v,y,score);
 
             // 最大値の更新
             if (max_score < score)
@@ -180,13 +179,14 @@ void LocalPathPlanner::calc_final_input()
             i++;
         }
     }
+
+  //  printf("max_velocity %f, max_yawrate %f \n",max_velocity,max_yawrate);
     // 現在速度の記録
     robot_state_->velocity = max_velocity;
     robot_state_->yaw_rate = max_yawrate;
 
-    bool is_visible= this->get_parameter("is_visible").as_bool();
     // pathの可視化
-    if (is_visible)
+    if (this->get_parameter("is_visible").as_bool())
     {
         const auto now = this->get_clock()->now();
         for (i = 0; i < trajectories.size(); i++)
@@ -243,25 +243,13 @@ double LocalPathPlanner::calc_evaluation(const std::vector<std::shared_ptr<Robot
 double LocalPathPlanner::calc_heading_eval(const std::vector<std::shared_ptr<RobotState>> &trajectory)
 {
     const auto last_trajectory = trajectory.back();
-    // ゴールまでの方位差分
-    const double target_theta = last_trajectory->calculate_goal_direction_theta(local_goal_.point.x, local_goal_.point.y);
-
-    // headingの評価値
-    // 180から引くことで、結果を最大化する
-    // つまり、0度の場合180となって最大パワー
-    const double heading_eval = (M_PI - target_theta) / M_PI; // 正規化
-
-    return heading_eval;
+    return last_trajectory->calculate_goal_direction_theta(local_goal_.point.x, local_goal_.point.y);
 }
 
 double LocalPathPlanner::calc_dist_eval(const std::vector<std::shared_ptr<RobotState>> &trajectory)
 {
     double roomba_radius = this->get_parameter("roomba_radius").as_double();
-    
-
-    double radius_margin=this->get_parameter("radius_margin").as_double();
-    
-
+    double radius_margin = this->get_parameter("radius_margin").as_double();
     double min_dist = this->get_parameter("search_range").as_double();
     // pathの点と障害物のすべての組み合わせを探索
     for (const auto &state : trajectory)
@@ -273,12 +261,13 @@ double LocalPathPlanner::calc_dist_eval(const std::vector<std::shared_ptr<RobotS
             auto dy = obs_pose.position.y - state->y;
             auto dist = hypot(dx, dy);
 
+           // printf("position x %f y %f   state x %f y %f dist %f \n",obs_pose.position.x,obs_pose.position.y,state->x,state->y,dist);
             // 壁に衝突したパスを評価
             if (dist <= roomba_radius + radius_margin)
             {
-                return -1 * MAX_OBSTRACLE_COST;
+                return MIN_OBSTRACLE_COST;
             }
-		//printf("dist %f",dist);
+		    
             // 最小値の更新
             if (dist < min_dist)
             {
@@ -287,8 +276,7 @@ double LocalPathPlanner::calc_dist_eval(const std::vector<std::shared_ptr<RobotS
         }
     }
 
-    double search_range=this->get_parameter("search_range").as_double();
-    
+    double search_range = this->get_parameter("search_range").as_double();
 
     return min_dist / search_range; // 正規化
 }
@@ -296,7 +284,7 @@ double LocalPathPlanner::calc_dist_eval(const std::vector<std::shared_ptr<RobotS
 double LocalPathPlanner::calc_vel_eval(const std::vector<std::shared_ptr<RobotState>> &trajectory)
 {
 
-    double max_vel=this->get_parameter("max_vel").as_double();
+    double max_vel = this->get_parameter("max_vel").as_double();
     
 
     const auto last_trajectory = trajectory.back();
@@ -321,7 +309,7 @@ std::vector<std::shared_ptr<RobotState>> LocalPathPlanner::calc_trajectory(doubl
     for (double t = 0; t <= predict_time; t += dt)
     {
         state = motion(state, v, y, dt);
-	//printf("state x:%f y:%f theta:%f v:%f yaw:%f",state->x,state->y,state->theta,state->velocity,state->yaw_rate);
+	 //   printf("state x:%f y:%f theta:%f v:%f yaw:%f \n",state->x,state->y,state->theta,state->velocity,state->yaw_rate);
         trajectory.push_back(state);
     }
 
@@ -339,8 +327,8 @@ V LocalPathPlanner::calc_dynamic_window()
 {
     // ロボットの物理的な最大および最小の速度および旋回速度
     V vs;
-    this->get_parameter("max_speed", vs.max_speed);
-    this->get_parameter("min_speed", vs.min_speed);
+    this->get_parameter("max_vel", vs.max_vel);
+    this->get_parameter("min_vel", vs.min_vel);
     this->get_parameter("max_yawrate", vs.max_yawrate);
     this->get_parameter("max_yawrate", vs.min_yawrate);
     vs.min_yawrate *= -1;
@@ -354,14 +342,14 @@ V LocalPathPlanner::calc_dynamic_window()
 
     double max_dyawrate=this->get_parameter("max_dyawrate").as_double();
     V vd;
-    vd.min_speed = robot_state_->velocity - max_accel * dt;
-    vd.max_speed = robot_state_->velocity + max_accel * dt;
+    vd.min_vel = robot_state_->velocity - max_accel * dt;
+    vd.max_vel = robot_state_->velocity + max_accel * dt;
     vd.min_yawrate = robot_state_->yaw_rate - max_dyawrate * dt;
     vd.max_yawrate = robot_state_->yaw_rate + max_dyawrate * dt;
 
     V va;
-    va.min_speed = std::max(vs.min_speed, vd.min_speed);
-    va.max_speed = std::min(vs.max_speed, vd.max_speed);
+    va.min_vel = std::max(vs.min_vel, vd.min_vel);
+    va.max_vel = std::min(vs.max_vel, vd.max_vel);
     va.min_yawrate = std::max(vs.min_yawrate, vd.min_yawrate);
     va.max_yawrate = std::min(vs.max_yawrate, vd.max_yawrate);
 

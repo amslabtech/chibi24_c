@@ -2,8 +2,8 @@
 #define V_DEFINE
 
 struct V{
-    double max_speed;
-    double min_speed;
+    double max_vel;
+    double min_vel;
     double max_yawrate;
     double min_yawrate;
 };

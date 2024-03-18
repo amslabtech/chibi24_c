@@ -11,3 +11,4 @@ chibi24_c_obstacle_detector:
     ignore_angle_range_list: [0.29, 0.98, 1.96]
     # --- はずれ値対策 ---
     ignore_dist: 1.0
+    max_obstacle_distance: 0.25
