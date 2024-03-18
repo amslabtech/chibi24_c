@@ -148,7 +148,7 @@ void LocalPathPlanner::calc_final_input()
     // 最低速度から最高速度まで速度解像度分移動しながら
     // 最低回転速度から最高回転速度まで回転解像度分くるくる回る
 
-    printf("dw min_vel %f, max_vel %f \n",dw.min_vel,dw.max_vel);
+   // printf("dw min_vel %f, max_vel %f \n",dw.min_vel,dw.max_vel);
    for (double v = dw.min_vel; v <= dw.max_vel; v += v_reso)
     {
         for (double y = dw.min_yawrate; y <= dw.max_yawrate; y += yawrate_reso)
