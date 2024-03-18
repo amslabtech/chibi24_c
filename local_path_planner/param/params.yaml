@@ -2,7 +2,7 @@ chibi24_c_local_path_planner:
   ros__parameters:
     max_vel: 0.25
     min_vel: 0.00
-    max_yawrate: 0.1
+    max_yawrate: 0.25
     max_accel: 1000.0
     max_dyawrate: 1000.0
     v_reso: 0.05
