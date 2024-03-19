@@ -196,6 +196,7 @@ std::shared_ptr<ANode> AStar::create_path(std::shared_ptr<ANode> start,std::shar
             open_list.push_back(new_node);
         }
     }
+    exit(0);    // ノードの終了
 }
 
 bool AStar::is_Wall(std::shared_ptr<ANode>  node){
